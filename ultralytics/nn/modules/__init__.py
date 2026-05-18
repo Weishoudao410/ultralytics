@@ -93,6 +93,7 @@ from .head import (
     YOLOESegment26,
     v10Detect,
 )
+from .experimental import BiFANFusion, BiFormerBlock, CoordAtt, DWConvBlock
 from .transformer import (
     AIFI,
     MLP,
@@ -108,12 +109,15 @@ from .transformer import (
 
 __all__ = (
     "AIFI",
+    "BiFANFusion",
+    "BiFormerBlock",
     "C1",
     "C2",
     "C2PSA",
     "C3",
     "C3TR",
     "CBAM",
+    "CoordAtt",
     "CIB",
     "DFL",
     "ELAN1",
@@ -148,6 +152,7 @@ __all__ = (
     "Conv2",
     "ConvTranspose",
     "DWConv",
+    "DWConvBlock",
     "DWConvTranspose2d",
     "DeformableTransformerDecoder",
     "DeformableTransformerDecoderLayer",
