@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
+
 from pathlib import Path
 
 from ultralytics import YOLO
@@ -13,6 +16,19 @@ DEVICE = os.getenv("DEVICE", "0")
 PROJECT = os.getenv("PROJECT", "runs/improve_train")
 ROOT = Path(__file__).resolve().parents[2]
 MODEL_DIR = ROOT / "experiments" / "models"
+
+# Ensure the local repository package is imported instead of site-packages.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from ultralytics import YOLO  # noqa: E402
+import ultralytics  # noqa: E402
+
+if "site-packages" in str(Path(ultralytics.__file__).resolve()):
+    raise RuntimeError(
+        "Detected site-packages ultralytics import. Please run from the local repo with editable install: "
+        "pip uninstall -y ultralytics && pip install -e ."
+    )
 
 VARIANTS = [
     (MODEL_DIR / "yolov8s_dwconv_backbone.yaml", "v1_dwconv_backbone", False),
