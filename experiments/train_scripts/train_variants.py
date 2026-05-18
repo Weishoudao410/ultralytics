@@ -2,6 +2,12 @@ from __future__ import annotations
 
 import os
 import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+MODEL_DIR = ROOT / "experiments" / "models"
+
 import warnings
 from pathlib import Path
 
@@ -30,6 +36,31 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from ultralytics import YOLO  # noqa: E402
+
+
+def _env(name: str, default: str) -> str:
+    value = os.getenv(name)
+    return default if value is None else value
+
+
+def train_all_variants() -> None:
+    data = _env("DATA", "coco8.yaml")
+    epochs = int(_env("EPOCHS", "100"))
+    imgsz = int(_env("IMGSZ", "640"))
+    batch = int(_env("BATCH", "16"))
+    device = _env("DEVICE", "0")
+    project = _env("PROJECT", "runs/improve_train")
+
+    variants = [
+        ("yolov8s_dwconv_backbone.yaml", "v1_dwconv_backbone", False),
+        ("yolov8s_ca_before_c2f.yaml", "v2_ca_before_c2f", False),
+        ("yolov8s_biformer_after_sppf.yaml", "v3_biformer_after_sppf", False),
+        ("yolov8s_bifan_neck.yaml", "v4_bifan_neck", False),
+        ("yolov8s_siou_loss.yaml", "v5_siou_loss", True),
+    ]
+
+    for yaml_name, run_name, use_siou in variants:
+        model_yaml = MODEL_DIR / yaml_name
 import ultralytics  # noqa: E402
 
 
