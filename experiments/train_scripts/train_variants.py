@@ -8,6 +8,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 MODEL_DIR = ROOT / "experiments" / "models"
 
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from ultralytics import YOLO  # noqa: E402
+
+
+def _register_custom_modules_for_runtime() -> None:
+    """Register local experimental modules into whichever ultralytics package is imported at runtime."""
+    from ultralytics.nn import tasks as nn_tasks
+    from ultralytics.nn.modules import BiFANFusion, BiFormerBlock, CoordAtt, DWConvBlock
+
+    # Make parse_model globals()[m] resolvable even when ultralytics comes from site-packages.
+    nn_tasks.DWConvBlock = DWConvBlock
+    nn_tasks.CoordAtt = CoordAtt
+    nn_tasks.BiFormerBlock = BiFormerBlock
+    nn_tasks.BiFANFusion = BiFANFusion
 import warnings
 from pathlib import Path
 
@@ -44,6 +60,8 @@ def _env(name: str, default: str) -> str:
 
 
 def train_all_variants() -> None:
+    _register_custom_modules_for_runtime()
+
     data = _env("DATA", "coco8.yaml")
     epochs = int(_env("EPOCHS", "100"))
     imgsz = int(_env("IMGSZ", "640"))
