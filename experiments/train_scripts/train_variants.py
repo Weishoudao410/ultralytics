@@ -5,6 +5,12 @@ import sys
 import warnings
 from pathlib import Path
 
+from pathlib import Path
+
+from pathlib import Path
+
+from ultralytics import YOLO
+
 DATA = os.getenv("DATA", "coco8.yaml")
 EPOCHS = int(os.getenv("EPOCHS", "100"))
 IMGSZ = int(os.getenv("IMGSZ", "640"))
@@ -27,6 +33,9 @@ if "site-packages" in str(Path(ultralytics.__file__).resolve()):
         "BiFormerBlock/BiFANFusion) may be missing. If parsing fails, run: pip uninstall -y ultralytics && "
         "pip install -e .",
         stacklevel=1,
+    raise RuntimeError(
+        "Detected site-packages ultralytics import. Please run from the local repo with editable install: "
+        "pip uninstall -y ultralytics && pip install -e ."
     )
 
 VARIANTS = [
@@ -42,6 +51,18 @@ for model_yaml, run_name, use_siou in VARIANTS:
         raise FileNotFoundError(f"Model YAML not found: {model_yaml}")
     os.environ["YOLO_USE_SIOU"] = "true" if use_siou else "false"
     model = YOLO(str(model_yaml)).load("yolov8s.pt")
+
+VARIANTS = [
+    ("experiments/models/yolov8s_dwconv_backbone.yaml", "v1_dwconv_backbone", False),
+    ("experiments/models/yolov8s_ca_before_c2f.yaml", "v2_ca_before_c2f", False),
+    ("experiments/models/yolov8s_biformer_after_sppf.yaml", "v3_biformer_after_sppf", False),
+    ("experiments/models/yolov8s_bifan_neck.yaml", "v4_bifan_neck", False),
+    ("experiments/models/yolov8s_siou_loss.yaml", "v5_siou_loss", True),
+]
+
+for model_yaml, run_name, use_siou in VARIANTS:
+    os.environ["YOLO_USE_SIOU"] = "true" if use_siou else "false"
+    model = YOLO(model_yaml).load("yolov8s.pt")
     model.train(
         data=DATA,
         epochs=EPOCHS,
