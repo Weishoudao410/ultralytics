@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import os
 import sys
+import warnings
+from pathlib import Path
+
 from pathlib import Path
 
 from pathlib import Path
@@ -25,6 +28,11 @@ from ultralytics import YOLO  # noqa: E402
 import ultralytics  # noqa: E402
 
 if "site-packages" in str(Path(ultralytics.__file__).resolve()):
+    warnings.warn(
+        "Detected site-packages ultralytics import. Attempting to continue, but custom modules (DWConvBlock/CoordAtt/"
+        "BiFormerBlock/BiFANFusion) may be missing. If parsing fails, run: pip uninstall -y ultralytics && "
+        "pip install -e .",
+        stacklevel=1,
     raise RuntimeError(
         "Detected site-packages ultralytics import. Please run from the local repo with editable install: "
         "pip uninstall -y ultralytics && pip install -e ."
