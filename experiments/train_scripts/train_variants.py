@@ -11,6 +11,12 @@ MODEL_DIR = ROOT / "experiments" / "models"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+# Force local repo import precedence even if site-packages ultralytics was preloaded by IDE/runtime.
+for _m in [m for m in list(sys.modules) if m == "ultralytics" or m.startswith("ultralytics.")]:
+    sys.modules.pop(_m, None)
+
+from ultralytics import YOLO  # noqa: E402
+import ultralytics  # noqa: E402
 from ultralytics import YOLO  # noqa: E402
 
 
@@ -60,6 +66,13 @@ def _env(name: str, default: str) -> str:
 
 
 def train_all_variants() -> None:
+    local_ultralytics = Path(ultralytics.__file__).resolve()
+    if ROOT not in local_ultralytics.parents:
+        raise RuntimeError(
+            f"Expected local ultralytics import under {ROOT}, but got {local_ultralytics}. "
+            "Please run in repo environment or reinstall editable: pip uninstall -y ultralytics && pip install -e ."
+        )
+
     _register_custom_modules_for_runtime()
 
     data = _env("DATA", "coco8.yaml")
