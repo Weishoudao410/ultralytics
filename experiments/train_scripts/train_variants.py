@@ -17,6 +17,7 @@ for _m in [m for m in list(sys.modules) if m == "ultralytics" or m.startswith("u
 
 from ultralytics import YOLO  # noqa: E402
 import ultralytics  # noqa: E402
+from ultralytics import YOLO  # noqa: E402
 
 
 def _register_custom_modules_for_runtime() -> None:
@@ -29,6 +30,34 @@ def _register_custom_modules_for_runtime() -> None:
     nn_tasks.CoordAtt = CoordAtt
     nn_tasks.BiFormerBlock = BiFormerBlock
     nn_tasks.BiFANFusion = BiFANFusion
+import warnings
+from pathlib import Path
+
+# Resolve repository root from this script path.
+ROOT = Path(__file__).resolve().parents[2]
+MODEL_DIR = ROOT / "experiments" / "models"
+
+# Ensure local repository is preferred in import resolution.
+from pathlib import Path
+
+from pathlib import Path
+
+from ultralytics import YOLO
+
+DATA = os.getenv("DATA", "coco8.yaml")
+EPOCHS = int(os.getenv("EPOCHS", "100"))
+IMGSZ = int(os.getenv("IMGSZ", "640"))
+BATCH = int(os.getenv("BATCH", "16"))
+DEVICE = os.getenv("DEVICE", "0")
+PROJECT = os.getenv("PROJECT", "runs/improve_train")
+ROOT = Path(__file__).resolve().parents[2]
+MODEL_DIR = ROOT / "experiments" / "models"
+
+# Ensure the local repository package is imported instead of site-packages.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from ultralytics import YOLO  # noqa: E402
 
 
 def _env(name: str, default: str) -> str:
@@ -63,6 +92,35 @@ def train_all_variants() -> None:
 
     for yaml_name, run_name, use_siou in variants:
         model_yaml = MODEL_DIR / yaml_name
+import ultralytics  # noqa: E402
+
+
+def train_all_variants() -> None:
+    data = os.getenv("DATA", "coco8.yaml")
+    epochs = int(os.getenv("EPOCHS", "100"))
+    imgsz = int(os.getenv("IMGSZ", "640"))
+    batch = int(os.getenv("BATCH", "16"))
+    device = os.getenv("DEVICE", "0")
+    project = os.getenv("PROJECT", "runs/improve_train")
+
+    if "site-packages" in str(Path(ultralytics.__file__).resolve()):
+        warnings.warn(
+            (
+                "Detected site-packages ultralytics import. Continuing anyway; "
+                "if custom blocks are missing, run: pip uninstall -y ultralytics && pip install -e ."
+            ),
+            stacklevel=1,
+        )
+
+    variants = [
+        (MODEL_DIR / "yolov8s_dwconv_backbone.yaml", "v1_dwconv_backbone", False),
+        (MODEL_DIR / "yolov8s_ca_before_c2f.yaml", "v2_ca_before_c2f", False),
+        (MODEL_DIR / "yolov8s_biformer_after_sppf.yaml", "v3_biformer_after_sppf", False),
+        (MODEL_DIR / "yolov8s_bifan_neck.yaml", "v4_bifan_neck", False),
+        (MODEL_DIR / "yolov8s_siou_loss.yaml", "v5_siou_loss", True),
+    ]
+
+    for model_yaml, run_name, use_siou in variants:
         if not model_yaml.exists():
             raise FileNotFoundError(f"Model YAML not found: {model_yaml}")
 
@@ -81,3 +139,48 @@ def train_all_variants() -> None:
 
 if __name__ == "__main__":
     train_all_variants()
+if "site-packages" in str(Path(ultralytics.__file__).resolve()):
+    warnings.warn(
+        "Detected site-packages ultralytics import. Attempting to continue, but custom modules (DWConvBlock/CoordAtt/"
+        "BiFormerBlock/BiFANFusion) may be missing. If parsing fails, run: pip uninstall -y ultralytics && "
+        "pip install -e .",
+        stacklevel=1,
+    raise RuntimeError(
+        "Detected site-packages ultralytics import. Please run from the local repo with editable install: "
+        "pip uninstall -y ultralytics && pip install -e ."
+    )
+
+VARIANTS = [
+    (MODEL_DIR / "yolov8s_dwconv_backbone.yaml", "v1_dwconv_backbone", False),
+    (MODEL_DIR / "yolov8s_ca_before_c2f.yaml", "v2_ca_before_c2f", False),
+    (MODEL_DIR / "yolov8s_biformer_after_sppf.yaml", "v3_biformer_after_sppf", False),
+    (MODEL_DIR / "yolov8s_bifan_neck.yaml", "v4_bifan_neck", False),
+    (MODEL_DIR / "yolov8s_siou_loss.yaml", "v5_siou_loss", True),
+]
+
+for model_yaml, run_name, use_siou in VARIANTS:
+    if not model_yaml.exists():
+        raise FileNotFoundError(f"Model YAML not found: {model_yaml}")
+    os.environ["YOLO_USE_SIOU"] = "true" if use_siou else "false"
+    model = YOLO(str(model_yaml)).load("yolov8s.pt")
+
+VARIANTS = [
+    ("experiments/models/yolov8s_dwconv_backbone.yaml", "v1_dwconv_backbone", False),
+    ("experiments/models/yolov8s_ca_before_c2f.yaml", "v2_ca_before_c2f", False),
+    ("experiments/models/yolov8s_biformer_after_sppf.yaml", "v3_biformer_after_sppf", False),
+    ("experiments/models/yolov8s_bifan_neck.yaml", "v4_bifan_neck", False),
+    ("experiments/models/yolov8s_siou_loss.yaml", "v5_siou_loss", True),
+]
+
+for model_yaml, run_name, use_siou in VARIANTS:
+    os.environ["YOLO_USE_SIOU"] = "true" if use_siou else "false"
+    model = YOLO(model_yaml).load("yolov8s.pt")
+    model.train(
+        data=DATA,
+        epochs=EPOCHS,
+        imgsz=IMGSZ,
+        batch=BATCH,
+        device=DEVICE,
+        project=PROJECT,
+        name=run_name,
+    )
