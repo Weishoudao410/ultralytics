@@ -33,6 +33,7 @@ from ultralytics import YOLO  # noqa: E402
 import ultralytics  # noqa: E402
 
 # ========== 环境变量读取 ==========
+DATA = os.getenv("DATA", r"C:\Users\13681\PycharmProjects\v8\dataset.yaml")
 DATA = os.getenv("DATA", "dataset.yaml")
 from ultralytics import YOLO  # noqa: E402
 
