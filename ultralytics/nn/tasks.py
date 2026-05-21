@@ -39,6 +39,10 @@ from ultralytics.nn.modules import (
     C3x,
     CBFuse,
     CBLinear,
+    BiFANFusion,
+    BiFormerBlock,
+    CoordAtt,
+    DWConvBlock,
     Classify,
     Concat,
     Conv,
@@ -1607,6 +1611,10 @@ def parse_model(d, ch, verbose=True):
             C2fPSA,
             C2PSA,
             DWConv,
+            DWConvBlock,
+            CoordAtt,
+            BiFormerBlock,
+            BiFANFusion,
             Focus,
             BottleneckCSP,
             C1,
@@ -1732,6 +1740,12 @@ def parse_model(d, ch, verbose=True):
             args = [c1, c2, *args[1:]]
         elif m is CBFuse:
             c2 = ch[f[-1]]
+        elif m is BiFANFusion:
+            c1 = [ch[x] for x in f] if isinstance(f, list) else [ch[f], ch[f]]
+            c2 = args[0] if len(args) else c1[0]
+            if c2 != nc:
+                c2 = make_divisible(min(c2, max_channels) * width, 8)
+            args = [c1, c2, *args[1:]]
         elif m in frozenset({TorchVision, Index}):
             c2 = args[0]
             c1 = ch[f]

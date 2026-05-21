@@ -1627,3 +1627,30 @@ class OBBMetrics(DetMetrics):
             names (dict[int, str], optional): Dictionary of class names.
         """
         DetMetrics.__init__(self, names)
+
+
+def siou(pred: torch.Tensor, target: torch.Tensor, eps: float = 1e-7) -> torch.Tensor:
+    """Compute SIoU for xyxy boxes with shape (N, 4)."""
+    px1, py1, px2, py2 = pred.unbind(-1)
+    tx1, ty1, tx2, ty2 = target.unbind(-1)
+    inter_x1 = torch.max(px1, tx1)
+    inter_y1 = torch.max(py1, ty1)
+    inter_x2 = torch.min(px2, tx2)
+    inter_y2 = torch.min(py2, ty2)
+    inter = (inter_x2 - inter_x1).clamp(0) * (inter_y2 - inter_y1).clamp(0)
+    pa = (px2 - px1).clamp(0) * (py2 - py1).clamp(0)
+    ta = (tx2 - tx1).clamp(0) * (ty2 - ty1).clamp(0)
+    iou = inter / (pa + ta - inter + eps)
+
+    pcx, pcy = (px1 + px2) / 2, (py1 + py2) / 2
+    tcx, tcy = (tx1 + tx2) / 2, (ty1 + ty2) / 2
+    cw = torch.max(px2, tx2) - torch.min(px1, tx1) + eps
+    ch = torch.max(py2, ty2) - torch.min(py1, ty1) + eps
+    dist = ((tcx - pcx) / cw).pow(2) + ((tcy - pcy) / ch).pow(2)
+
+    pw, ph = (px2 - px1).clamp(eps), (py2 - py1).clamp(eps)
+    tw, th = (tx2 - tx1).clamp(eps), (ty2 - ty1).clamp(eps)
+    sw = torch.abs(pw - tw) / torch.max(pw, tw)
+    sh = torch.abs(ph - th) / torch.max(ph, th)
+    shape = (1 - torch.exp(-sw)).pow(4) + (1 - torch.exp(-sh)).pow(4)
+    return iou - 0.5 * (dist + shape)
