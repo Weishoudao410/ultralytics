@@ -74,6 +74,14 @@ class BiFormerBlock(nn.Module):
 class BiFANFusion(nn.Module):
     """BiFAN weighted feature fusion (2-input)."""
 
+    def __init__(self, c1: int | list[int] | tuple[int, ...], c2: int | None = None):
+        super().__init__()
+        in_channels = list(c1) if isinstance(c1, (list, tuple)) else [c1, c1]
+        c2 = c2 or in_channels[0]
+        self.w = nn.Parameter(torch.ones(len(in_channels), dtype=torch.float32))
+        self.eps = 1e-4
+        self.proj = nn.ModuleList(Conv(ci, c2, 1, 1) if ci != c2 else nn.Identity() for ci in in_channels)
+        self.conv = Conv(c2, c2, 3, 1)
     def __init__(self, c1: int, c2: int | None = None):
         super().__init__()
         c2 = c2 or c1
@@ -84,5 +92,8 @@ class BiFANFusion(nn.Module):
     def forward(self, xs: list[torch.Tensor] | tuple[torch.Tensor, torch.Tensor]) -> torch.Tensor:
         w = torch.relu(self.w)
         w = w / (w.sum() + self.eps)
+        x = 0
+        for i, t in enumerate(xs):
+            x = x + w[i] * self.proj[i](t)
         x = w[0] * xs[0] + w[1] * xs[1]
         return self.conv(x)
