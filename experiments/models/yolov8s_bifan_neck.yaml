@@ -1,4 +1,5 @@
 # Replace neck fusion with BiFANFusion modules (stable Concat -> BiFANFusion pattern)
+# Replace neck fusion with BiFANFusion modules
 nc: 80
 scales:
   s: [0.33, 0.50, 1024]
@@ -35,3 +36,15 @@ head:
   - [-1, 3, C2f, [1024]]
 
   - [[24, 28, 32], 1, Detect, [nc]]
+  - [[-1, 6], 1, BiFANFusion, [512]]
+  - [-1, 3, C2f, [512]]
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 4], 1, BiFANFusion, [256]]
+  - [-1, 3, C2f, [256]]
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [[-1, 12], 1, BiFANFusion, [512]]
+  - [-1, 3, C2f, [512]]
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [[-1, 9], 1, BiFANFusion, [1024]]
+  - [-1, 3, C2f, [1024]]
+  - [[15, 18, 21], 1, Detect, [nc]]
